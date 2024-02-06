@@ -1,4 +1,5 @@
 {
     "editor.tabSize": 2,
-    "editor.autoIndent": "advanced"
+    "editor.autoIndent": "advanced",
+    // "debug.javascript.autoAttachFilter": "smart",
 }
