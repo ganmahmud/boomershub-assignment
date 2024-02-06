@@ -34,4 +34,11 @@ export type OperationResult = {
   id?: number;
   name?: string;
   reason?: string;
+  images?: {};
+};
+
+export type ImageStatus = {
+  success: boolean;
+  imageUrls?: string[];
+  error?: string;
 };
