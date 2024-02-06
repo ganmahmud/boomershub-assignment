@@ -1,14 +1,5 @@
-import {
-  Controller,
-  Get,
-  Param,
-  Post,
-  Body,
-  Put,
-  Delete,
-  Query,
-} from '@nestjs/common';
-import { Provider as ProviderModel, Prisma } from '@prisma/client';
+import { Controller, Get, Param, Post, Body, Put, Delete, Query } from '@nestjs/common';
+import { Provider as ProviderModel, Prisma, Provider } from '@prisma/client';
 import { AppService } from './app.service';
 import { CustomProviderAPIResponse } from './utils/customType';
 
@@ -23,5 +14,10 @@ export class AppController {
     @Query('skip') skip?: number,
   ): Promise<CustomProviderAPIResponse[]> {
     return this.appService.getFilteredProviders(searchString, take, skip);
+  }
+
+  @Get('provider/:id')
+  async getProviderById(@Param('id') id: string): Promise<Partial<Provider>> {
+    return this.appService.getProviderById(parseInt(id));
   }
 }
