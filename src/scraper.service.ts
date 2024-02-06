@@ -136,7 +136,7 @@ export class ScraperService {
 
       const allData = tableData.providersData;
 
-      const providerDataArray = await Promise.all(
+      const providerComplimentaryDataArray = await Promise.all(
         tableData.urlList.map(async url => {
           const providerId = new URL(url).searchParams.get('pid') || '';
           if (allData[providerId]) {
@@ -147,11 +147,12 @@ export class ScraperService {
         }),
       );
 
-      providerDataArray.forEach((entry: any) => {
-        const key = Object.keys(entry)[0];
-        if (allData[key]) {
-          allData[key] = { scrapingId: key, ...allData[key], ...entry[key] };
-        }
+      providerComplimentaryDataArray.forEach((entry: any) => {
+        Object.keys(entry).forEach(key => {
+          if (allData[key]) {
+            allData[key] = { scrapingId: key, ...allData[key], ...entry[key] };
+          }
+        });
       });
 
       const providersData = Object.values(allData);

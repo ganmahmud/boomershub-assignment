@@ -1,11 +1,14 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { City, County, PrismaClient, Provider, State, ZipCode } from '@prisma/client';
 import { getStateAbbreviation } from './utils/schem-util';
-import { CustomProviderAPIResponse, OperationResult, scraperResponse } from './utils/customType';
+import { CustomProviderAPIResponse, ImageStatus, OperationResult, scraperResponse } from './utils/customType';
+import * as fs from 'fs';
+import * as path from 'path';
+import { AwsService } from './aws.service';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
-  constructor() {
+  constructor(private readonly awsService: AwsService) {
     super({
       log: [
         {
@@ -131,6 +134,42 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     return { id: newZipCode.id } as ZipCode;
   }
 
+  public async uploadProviderImagesToS3(providerId: number, providerName: string): Promise<ImageStatus> {
+    try {
+      const providerFolderPath = path.join(__dirname, '..', 'images', providerName.toLowerCase().replace(/\s/g, '_'));
+      console.log('path -> ', providerFolderPath);
+      if (fs.existsSync(providerFolderPath)) {
+        const imageFileNames = fs.readdirSync(providerFolderPath);
+
+        // Use Promise.all to upload images concurrently
+        const uploadedImageUrls = await Promise.all(
+          imageFileNames.map(async fileName => {
+            const localFilePath = path.join(providerFolderPath, fileName);
+            const s3Key = `providers/${providerId}/${fileName}`;
+            const s3ImageUrl = await this.awsService.uploadFile(localFilePath, s3Key);
+
+            // Store the S3 URL in the ProviderImage table
+            await this.providerImage.create({
+              data: {
+                url: s3ImageUrl,
+                providerId,
+              },
+            });
+
+            return s3ImageUrl;
+          }),
+        );
+
+        return { success: true, imageUrls: uploadedImageUrls };
+      } else {
+        return { success: false, error: 'Provider folder not found' };
+      }
+    } catch (error) {
+      console.error('Error uploading images:', error.message);
+      return { success: false, error: 'Failed to upload images' };
+    }
+  }
+
   async sendDataToDb(providerDataArray: scraperResponse[]): Promise<OperationResult[]> {
     try {
       const providerCreatePromises: Promise<OperationResult>[] = [];
@@ -153,7 +192,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
 
   private async createOrUpdateProvider(providerData: scraperResponse): Promise<OperationResult> {
     try {
-      const { name, address, city, zipCode, county, state, type, capacity, phone, mapUrl } = providerData;
+      const { name, address, city, zipCode, county, state, type, capacity, phone, mapUrl, scrapingId } = providerData;
       console.log(`Preparing ${name} data`);
 
       const existingProvider: Provider = await this.provider.findUnique({
@@ -184,6 +223,7 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
       const createdProvider = await this.provider.create({
         data: {
           name,
+          scrapingId,
           address,
           type,
           capacity: capacity ? parseInt(capacity) : null,
@@ -200,8 +240,10 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
         },
       });
 
+      const providerImages = await this.uploadProviderImagesToS3(createdProvider.id, createdProvider.name);
+
       console.log(`Provider ${name} inserted successfully.`);
-      return { success: true, id: createdProvider.id, name: createdProvider.name };
+      return { success: true, id: createdProvider.id, name: createdProvider.name, images: providerImages };
     } catch (error) {
       console.error('Error creating or updating provider:', error);
     }
