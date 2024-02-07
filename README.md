@@ -9,8 +9,14 @@
 
 - `npm install`
 - `npm run docker` - It will setup up everything mysql container with a database named "boomershub". Adminer web has also been include at localhost:8080, just as root as both username and password.
-- `npm run db:push` - It will migrate the database schema to the mysql database
+- `npm run db:push` - It will migrate the database schema to the mysql database. To have some initial data you can run the following command `npx prisma see`
 - `npm run terraform:go` - It will provision a aws service in localstack. Localstack emulates AWS service in local machine
+
+# How to initiate the scraping
+
+You can initiate the scraping of a certain provider - `The Delaney At Georgetown Village` with the folloiwing endpoint - http://localhost:3000/scraper/texas/The%20Delaney%20At%20Georgetown%20Village
+
+It will scrape and load the data into the database. If multiple provider is found, it will scrape all of them, send them to the database.
 
 # Why LocalStack?
 
