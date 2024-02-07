@@ -2,8 +2,8 @@
 
 - Node
 - Docker
-- Terraform CLI
-- AWS ClI
+- Terraform CLI ( [Installation](https://developer.hashicorp.com/terraform/install?product_intent=terraform) )
+- AWS ClI ( [Installtion](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) )
 
 # Commands to setup the project
 
