@@ -1,11 +1,4 @@
-import {
-  PrismaClient,
-  State,
-  County,
-  City,
-  ZipCode,
-  Provider,
-} from '@prisma/client';
+import { PrismaClient, State, County, City, ZipCode, Provider } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -49,6 +42,12 @@ async function seed() {
     });
     console.log('Zip Code created:', zipCode77001);
 
+    // Generate random scraping ID
+    const scrapingId = Math.random().toString(36).substring(7);
+
+    // Generate random map URL
+    const mapUrl = 'https://www.google.com/maps/place/359+VILLAGE+COMMONS+BOULEVARD,+Georgetown,+TX+78633';
+
     // Create Providers
     const providers = await prisma.provider.createMany({
       data: [
@@ -62,6 +61,8 @@ async function seed() {
           countyId: harrisCounty.id,
           cityId: houstonCity.id,
           zipCodeId: zipCode77001.id,
+          scrapingId,
+          mapUrl,
         },
         // Add more providers as needed
       ],
