@@ -12,7 +12,11 @@ export class AppService {
   async getFilteredProviders(searchString: string, take?: number, skip?: number): Promise<CustomProviderAPIResponse[]> {
     const conditions: Prisma.ProviderWhereInput = {};
 
-    if (searchString) {
+    if (!searchString && searchString.length === 0) {
+      return [];
+    }
+
+    if (searchString && searchString.length > 0) {
       conditions.OR = [
         { name: { contains: searchString } },
         { type: { contains: searchString } },
